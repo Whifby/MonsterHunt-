@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<title>Monster Hunt AR</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#000}
+#camera{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
+#fallback{position:fixed;inset:0;display:none;place-items:center;color:white;text-align:center;padding:30px;background:linear-gradient(#182338,#071018)}
+#hud{position:fixed;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;z-index:5}
+.panel{background:rgba(10,15,25,.72);backdrop-filter:blur(12px);color:#fff;border-radius:18px;padding:11px 14px;box-shadow:0 8px 30px #0005}
+#title{font-weight:800;font-size:16px}.small{font-size:12px;opacity:.8;margin-top:2px}
+#count{font-weight:800;font-size:18px}
+#status{position:fixed;left:50%;transform:translateX(-50%);bottom:max(24px,env(safe-area-inset-bottom));z-index:6;white-space:nowrap}
+#monster{position:fixed;left:50%;top:50%;width:160px;height:190px;transform:translate(-50%,-50%);z-index:4;display:none;filter:drop-shadow(0 18px 12px #0008);cursor:pointer;touch-action:manipulation}
+.monster-body{position:absolute;left:28px;top:48px;width:104px;height:112px;border-radius:48% 48% 42% 42%;background:var(--c);border:4px solid #1118;box-shadow:inset -14px -12px 0 #0001}
+.eye{position:absolute;top:77px;width:25px;height:32px;border-radius:50%;background:white;border:3px solid #111}
+.eye:after{content:"";position:absolute;left:7px;top:7px;width:8px;height:12px;border-radius:50%;background:#111}
+.e1{left:48px}.e2{left:87px}
+.ear{position:absolute;top:26px;width:44px;height:55px;background:var(--c);border:4px solid #1118;clip-path:polygon(50% 0,100% 100%,0 100%);transform-origin:bottom}
+.l{left:26px;transform:rotate(-18deg)}.r{right:26px;transform:rotate(18deg)}
+.belly{position:absolute;left:48px;top:116px;width:64px;height:40px;border-radius:50%;background:#fff8}
+#monster .label{position:absolute;top:172px;left:0;right:0;text-align:center;color:white;font-weight:800;text-shadow:0 2px 5px #000}
+#catch{position:fixed;inset:0;z-index:10;display:none;place-items:center;color:white;font-size:28px;font-weight:900;text-shadow:0 3px 12px #000;background:#0004}
+button{border:0;border-radius:14px;padding:12px 16px;font-weight:800;font-size:15px}
+</style>
+</head>
+<body>
+<video id="camera" autoplay playsinline muted></video>
+<div id="fallback"><div><h1>Monster Hunt</h1><p id="error">Die Kamera konnte nicht gestartet werden.</p><p>Öffne die Seite über HTTPS und erlaube den Kamerazugriff.</p></div></div>
+
+<div id="hud">
+  <div class="panel"><div id="title">👾 MONSTER HUNT</div><div class="small" id="hint">Suche nach Monstern …</div></div>
+  <div class="panel">⭐ <span id="count">0</span></div>
+</div>
+
+<div id="monster" aria-label="Monster fangen">
+  <div class="ear l"></div><div class="ear r"></div>
+  <div class="monster-body"></div>
+  <div class="eye e1"></div><div class="eye e2"></div>
+  <div class="belly"></div>
+  <div class="label" id="monsterName">Mossling</div>
+</div>
+
+<div id="status" class="panel">Kamera wird gestartet …</div>
+<div id="catch">🎉 Gefangen!</div>
+
+<script>
+const video=document.getElementById('camera'), monster=document.getElementById('monster');
+const status=document.getElementById('status'), hint=document.getElementById('hint');
+const countEl=document.getElementById('count'), nameEl=document.getElementById('monsterName');
+const catchFx=document.getElementById('catch'), fallback=document.getElementById('fallback');
+const monsters=[
+ {name:"Mossling",color:"#55b957",type:"Wald"},
+ {name:"Sparkit",color:"#f2c94c",type:"Strom"},
+ {name:"Bubbloon",color:"#38bdf8",type:"Wasser"}
+];
+let caught=Number(localStorage.getItem("mh_caught")||0), current=null, spawned=false;
+countEl.textContent=caught;
+
+async function startCamera(){
+ try{
+   const stream=await navigator.mediaDevices.getUserMedia({
+     video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},
+     audio:false
+   });
+   video.srcObject=stream;
+   status.textContent="Bewege dein iPhone langsam …";
+   hint.textContent="Tippe auf den Bildschirm, um zu suchen";
+ }catch(e){
+   fallback.style.display="grid"; document.getElementById("error").textContent=e.message||"Kamerazugriff verweigert.";
+   status.style.display="none";
+ }
+}
+function spawn(){
+ if(spawned) return;
+ current=monsters[Math.floor(Math.random()*monsters.length)];
+ monster.style.setProperty("--c",current.color);
+ nameEl.textContent=current.name;
+ // Slightly off-center to make it feel like it is in the scene.
+ const x=35+Math.random()*30, y=42+Math.random()*18;
+ monster.style.left=x+"%"; monster.style.top=y+"%";
+ monster.style.display="block"; spawned=true;
+ status.textContent="Da ist ein Monster! 👆";
+ hint.textContent=current.type+"-Monster";
+ monster.animate([
+   {transform:"translate(-50%,-50%) scale(.1)"},
+   {transform:"translate(-50%,-50%) scale(1.12)"},
+   {transform:"translate(-50%,-50%) scale(1)"}
+ ],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
+}
+function catchMonster(){
+ if(!spawned) return;
+ caught++; localStorage.setItem("mh_caught",caught); countEl.textContent=caught;
+ monster.animate([
+   {transform:"translate(-50%,-50%) scale(1)",opacity:1},
+   {transform:"translate(-50%,-50%) scale(1.4)",opacity:.9},
+   {transform:"translate(-50%,-50%) scale(.05)",opacity:0}
+ ],{duration:350,easing:"ease-in"});
+ catchFx.style.display="grid"; setTimeout(()=>catchFx.style.display="none",650);
+ setTimeout(()=>{
+   monster.style.display="none"; monster.style.opacity=1; spawned=false;
+   status.textContent="Suche das nächste Monster …";
+ },400);
+}
+monster.addEventListener("click",catchMonster);
+document.body.addEventListener("click",(e)=>{
+ if(e.target===monster || monster.contains(e.target)) return;
+ if(!spawned && e.target!==status) spawn();
+});
+startCamera();
+</script>
+</body>
+</html>
