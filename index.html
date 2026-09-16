@@ -36,7 +36,7 @@ button{font:inherit}
 </style>
 </head>
 <body>
-<div id="permission"><div class="box"><div style="font-size:58px">👾</div><h1>Monster Hunt</h1><p>Erlaube Kamera und Standort. So können wir später echte Monster-Spawns an deinen Weg koppeln.</p><button class="primary" id="startBtn">Spiel starten</button></div></div>
+<div id="permission"><div class="box"><div style="font-size:58px">👾</div><h1>Monster Hunt</h1><p>Erlaube Kamera und Standort. Danach erscheinen Monster automatisch, während du unterwegs bist.</p><button class="primary" id="startBtn">Spiel starten</button></div></div>
 
 <video id="camera" autoplay playsinline muted></video><div id="shade"></div><div id="range"></div>
 
@@ -83,7 +83,7 @@ const monsters=[
 {name:"Frostel",type:"Eis",emoji:"❄️",color:"#67e8f9",rarity:"Selten"}
 ];
 let collectionData=JSON.parse(localStorage.getItem("mh_collection")||"[]");
-let position=null,watchId=null,current=null,spawned=false;
+let position=null,watchId=null,current=null,spawned=false,spawnTimer=null,spawnCooldownUntil=0;
 caughtEl.textContent=collectionData.length;
 
 function renderCollection(){
@@ -100,22 +100,42 @@ async function start(){
   video.srcObject=stream;
   permission.style.display="none";
   startGPS();
-  statusEl.textContent="GPS wird gesucht …";
+  statusEl.textContent="Monster suchen automatisch nach dir …";
  }catch(e){alert("Bitte erlaube Safari den Kamerazugriff.");}
 }
 function startGPS(){
- if(!navigator.geolocation){gpsText.textContent="GPS nicht verfügbar";return}
+ if(!navigator.geolocation){
+   gpsText.textContent="GPS nicht verfügbar";
+   startAutoSpawns();
+   return;
+ }
  watchId=navigator.geolocation.watchPosition(p=>{
    position={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};
    gpsText.textContent=`📍 ${position.lat.toFixed(4)}, ${position.lon.toFixed(4)}`;
-   $("mapInfo").textContent=`Deine Position ist aktiv (ca. ${Math.round(position.accuracy)} m Genauigkeit). Monster werden jetzt in einem Spielradius von ungefähr 100 m verwaltet.`;
+   $("mapInfo").textContent=`Deine Position ist aktiv (ca. ${Math.round(position.accuracy)} m Genauigkeit).`;
    updateMap();
-   if(!spawned && Math.random()<0.22) spawnEncounter();
  },()=>{
    gpsText.textContent="📍 Standort nicht erlaubt";
-   statusEl.textContent="Standort erlauben, damit GPS-Spawns funktionieren.";
+   statusEl.textContent="Standort nicht verfügbar – Monster können trotzdem erscheinen.";
  },{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+ startAutoSpawns();
 }
+function startAutoSpawns(){
+ if(spawnTimer) return;
+
+ // Erstes Monster automatisch nach 3 Sekunden.
+ setTimeout(()=>{
+   if(!spawned) spawnEncounter();
+ },3000);
+
+ // Danach regelmäßig neue Begegnungen, ohne dass der Spieler den Bildschirm antippen muss.
+ spawnTimer=setInterval(()=>{
+   if(!spawned && Date.now() >= spawnCooldownUntil){
+     spawnEncounter();
+   }
+ },12000);
+}
+
 function spawnEncounter(){
  if(spawned)return;
  current=monsters[Math.floor(Math.random()*monsters.length)];
@@ -125,7 +145,8 @@ function spawnEncounter(){
  monsterEl.style.left=(30+Math.random()*40)+"%";
  monsterEl.style.top=(40+Math.random()*20)+"%";
  monsterEl.style.display="block";spawned=true;
- statusEl.textContent=`${current.emoji} ${current.name} ist in der Nähe!`;
+ const distance=Math.floor(25+Math.random()*76);
+ statusEl.textContent=`${current.emoji} ${current.name} ist ${distance} m entfernt!`;
  monsterEl.animate([{transform:"translate(-50%,-50%) scale(.1)"},{transform:"translate(-50%,-50%) scale(1.12)"},{transform:"translate(-50%,-50%) scale(1)"}],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
 }
 function openEncounter(){
@@ -140,7 +161,14 @@ function catchCurrent(){
  caughtEl.textContent=collectionData.length;renderCollection();
  encounter.style.display="none";
  monsterEl.animate([{transform:"translate(-50%,-50%) scale(1)",opacity:1},{transform:"translate(-50%,-50%) scale(1.4)",opacity:.9},{transform:"translate(-50%,-50%) scale(.05)",opacity:0}],{duration:350});
- setTimeout(()=>{monsterEl.style.display="none";monsterEl.style.opacity=1;spawned=false;current=null;statusEl.textContent="Suche nach weiteren Monstern …"},400);
+ setTimeout(()=>{
+   monsterEl.style.display="none";
+   monsterEl.style.opacity=1;
+   spawned=false;
+   current=null;
+   spawnCooldownUntil=Date.now()+7000;
+   statusEl.textContent="Suche automatisch nach weiteren Monstern …";
+ },400);
 }
 function updateMap(){
  if(!position)return;
