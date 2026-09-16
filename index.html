@@ -3,114 +3,168 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#111827">
-<title>Monster Hunt AR</title>
+<meta name="theme-color" content="#080b14">
+<title>Monster Hunt v0.3</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#000}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#05070c}
+button{font:inherit}
 #camera{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
-#fallback{position:fixed;inset:0;display:none;place-items:center;color:white;text-align:center;padding:30px;background:linear-gradient(#182338,#071018)}
-#hud{position:fixed;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;z-index:5}
-.panel{background:rgba(10,15,25,.72);backdrop-filter:blur(12px);color:#fff;border-radius:18px;padding:11px 14px;box-shadow:0 8px 30px #0005}
-#title{font-weight:800;font-size:16px}.small{font-size:12px;opacity:.8;margin-top:2px}
-#count{font-weight:800;font-size:18px}
-#status{position:fixed;left:50%;transform:translateX(-50%);bottom:max(24px,env(safe-area-inset-bottom));z-index:6;white-space:nowrap}
-#monster{position:fixed;left:50%;top:50%;width:160px;height:190px;transform:translate(-50%,-50%);z-index:4;display:none;filter:drop-shadow(0 18px 12px #0008);cursor:pointer;touch-action:manipulation}
-.monster-body{position:absolute;left:28px;top:48px;width:104px;height:112px;border-radius:48% 48% 42% 42%;background:var(--c);border:4px solid #1118;box-shadow:inset -14px -12px 0 #0001}
-.eye{position:absolute;top:77px;width:25px;height:32px;border-radius:50%;background:white;border:3px solid #111}
-.eye:after{content:"";position:absolute;left:7px;top:7px;width:8px;height:12px;border-radius:50%;background:#111}
-.e1{left:48px}.e2{left:87px}
-.ear{position:absolute;top:26px;width:44px;height:55px;background:var(--c);border:4px solid #1118;clip-path:polygon(50% 0,100% 100%,0 100%);transform-origin:bottom}
-.l{left:26px;transform:rotate(-18deg)}.r{right:26px;transform:rotate(18deg)}
-.belly{position:absolute;left:48px;top:116px;width:64px;height:40px;border-radius:50%;background:#fff8}
-#monster .label{position:absolute;top:172px;left:0;right:0;text-align:center;color:white;font-weight:800;text-shadow:0 2px 5px #000}
-#catch{position:fixed;inset:0;z-index:10;display:none;place-items:center;color:white;font-size:28px;font-weight:900;text-shadow:0 3px 12px #000;background:#0004}
-button{border:0;border-radius:14px;padding:12px 16px;font-weight:800;font-size:15px}
+#shade{position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,#0009,transparent 30%,transparent 70%,#0009)}
+#hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;z-index:5;display:flex;justify-content:space-between;gap:8px}
+.panel{background:rgba(8,12,22,.78);backdrop-filter:blur(14px);color:#fff;border:1px solid #fff1;border-radius:18px;box-shadow:0 8px 30px #0007}
+#brand{padding:10px 13px}.title{font-weight:900}.sub{font-size:11px;opacity:.76;margin-top:3px}
+#stats{display:flex;align-items:center;gap:9px;padding:9px 12px;font-weight:900}.iconbtn{border:0;background:none;color:#fff;font-size:18px;padding:0}
+#status{position:fixed;left:50%;transform:translateX(-50%);bottom:max(86px,calc(env(safe-area-inset-bottom) + 76px));z-index:7;padding:10px 14px;white-space:nowrap;font-size:13px;font-weight:800}
+#monster{position:fixed;width:170px;height:205px;transform:translate(-50%,-50%);z-index:4;display:none;filter:drop-shadow(0 18px 14px #0009);touch-action:manipulation}
+.mbody{position:absolute;left:31px;top:54px;width:108px;height:116px;border-radius:48% 48% 42% 42%;background:var(--c);border:4px solid #1119;box-shadow:inset -15px -12px 0 #0001}
+.eye{position:absolute;top:84px;width:27px;height:34px;border-radius:50%;background:#fff;border:3px solid #111}.eye:after{content:"";position:absolute;left:8px;top:7px;width:8px;height:13px;border-radius:50%;background:#111}.e1{left:51px}.e2{left:92px}
+.ear{position:absolute;top:28px;width:46px;height:58px;background:var(--c);border:4px solid #1119;clip-path:polygon(50% 0,100% 100%,0 100%)}.l{left:29px;transform:rotate(-18deg)}.r{right:29px;transform:rotate(18deg)}
+.belly{position:absolute;left:52px;top:125px;width:66px;height:42px;border-radius:50%;background:#fff8}
+.mlabel{position:absolute;top:178px;left:0;right:0;text-align:center;color:#fff;font-weight:900;text-shadow:0 2px 6px #000}
+#range{position:fixed;left:50%;top:50%;width:260px;height:260px;border:2px solid #fff5;border-radius:50%;transform:translate(-50%,-50%);z-index:2;pointer-events:none}
+#bottom{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:10;display:flex;gap:9px}
+.nav{flex:1;border:0;padding:12px 7px;border-radius:16px;background:#080c16db;color:#fff;font-weight:850}.nav.active{outline:2px solid #fff5}
+#collection,#map{position:fixed;inset:0;z-index:20;background:#090d18;color:#fff;display:none;overflow:auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 100px}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.head h2{margin:0;font-size:24px}.close{border:0;background:#ffffff12;color:#fff;border-radius:12px;padding:9px 12px}
+.notice{padding:12px 14px;border-radius:16px;background:#ffffff0b;margin:10px 0 14px;font-size:13px;line-height:1.4}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{padding:15px;border-radius:20px;background:#ffffff0d;border:1px solid #ffffff12}.orb{width:72px;height:72px;border-radius:50%;margin:auto auto 9px;background:var(--c);border:4px solid #111;box-shadow:inset -10px -8px #0001}.card h3{margin:0;text-align:center;font-size:16px}.card p{margin:5px 0 0;text-align:center;opacity:.7;font-size:12px}
+#mapCanvas{width:100%;height:60vh;border-radius:22px;background:radial-gradient(circle,#26334f,#101729 65%);position:relative;overflow:hidden}
+#playerDot{position:absolute;left:50%;top:50%;width:20px;height:20px;background:#fff;border:5px solid #5b8cff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 12px #5b8cff22;z-index:3}
+.spawn{position:absolute;transform:translate(-50%,-50%);font-size:29px;filter:drop-shadow(0 5px 4px #000);cursor:pointer}.spawn small{display:block;color:white;font-size:9px;text-align:center;font-weight:800}
+#permission{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:#070a12;color:#fff;padding:28px;text-align:center}.box{max-width:430px}.primary{border:0;border-radius:15px;padding:14px 20px;background:#fff;color:#111;font-weight:900;margin-top:12px}
+#encounter{position:fixed;inset:0;z-index:25;display:none;place-items:center;background:#0009;color:white;text-align:center;padding:24px}.encbox{background:#0b1020f2;border:1px solid #fff2;border-radius:24px;padding:24px;max-width:360px}.encemoji{font-size:70px}.encbox h2{margin:6px 0}.encbox p{opacity:.75}.catchbtn{border:0;border-radius:15px;padding:14px 22px;font-weight:900;background:#fff;color:#111}
 </style>
 </head>
 <body>
-<video id="camera" autoplay playsinline muted></video>
-<div id="fallback"><div><h1>Monster Hunt</h1><p id="error">Die Kamera konnte nicht gestartet werden.</p><p>Öffne die Seite über HTTPS und erlaube den Kamerazugriff.</p></div></div>
+<div id="permission"><div class="box"><div style="font-size:58px">👾</div><h1>Monster Hunt</h1><p>Erlaube Kamera und Standort. So können wir später echte Monster-Spawns an deinen Weg koppeln.</p><button class="primary" id="startBtn">Spiel starten</button></div></div>
+
+<video id="camera" autoplay playsinline muted></video><div id="shade"></div><div id="range"></div>
 
 <div id="hud">
-  <div class="panel"><div id="title">👾 MONSTER HUNT</div><div class="small" id="hint">Suche nach Monstern …</div></div>
-  <div class="panel">⭐ <span id="count">0</span></div>
+ <div id="brand" class="panel"><div class="title">👾 MONSTER HUNT</div><div class="sub" id="gpsText">GPS wird gesucht …</div></div>
+ <div id="stats" class="panel">⭐ <span id="caught">0</span><button class="iconbtn" id="collectionBtn">🎒</button></div>
 </div>
 
-<div id="monster" aria-label="Monster fangen">
-  <div class="ear l"></div><div class="ear r"></div>
-  <div class="monster-body"></div>
-  <div class="eye e1"></div><div class="eye e2"></div>
-  <div class="belly"></div>
-  <div class="label" id="monsterName">Mossling</div>
+<div id="monster">
+ <div class="ear l"></div><div class="ear r"></div><div class="mbody"></div>
+ <div class="eye e1"></div><div class="eye e2"></div><div class="belly"></div><div class="mlabel" id="monsterName"></div>
 </div>
 
-<div id="status" class="panel">Kamera wird gestartet …</div>
-<div id="catch">🎉 Gefangen!</div>
+<div id="status" class="panel">Spiel wird vorbereitet …</div>
+
+<div id="bottom">
+ <button class="nav active" id="huntBtn">📷 Jagen</button>
+ <button class="nav" id="mapBtn">🗺️ Karte</button>
+</div>
+
+<section id="collection">
+ <div class="head"><h2>🎒 Sammlung</h2><button class="close" id="closeCollection">Schließen</button></div>
+ <div class="notice">Die Anzahl wird auf diesem iPhone gespeichert.</div><div class="grid" id="grid"></div>
+</section>
+
+<section id="map">
+ <div class="head"><h2>🗺️ Monsterkarte</h2><button class="close" id="closeMap">Schließen</button></div>
+ <div class="notice" id="mapInfo">GPS wird geladen …</div><div id="mapCanvas"><div id="playerDot"></div></div>
+</section>
+
+<div id="encounter"><div class="encbox"><div class="encemoji" id="encEmoji">👾</div><h2 id="encTitle">Monster</h2><p id="encText"></p><button class="catchbtn" id="encCatch">Monster fangen</button></div></div>
 
 <script>
-const video=document.getElementById('camera'), monster=document.getElementById('monster');
-const status=document.getElementById('status'), hint=document.getElementById('hint');
-const countEl=document.getElementById('count'), nameEl=document.getElementById('monsterName');
-const catchFx=document.getElementById('catch'), fallback=document.getElementById('fallback');
+const $=id=>document.getElementById(id);
+const video=$("camera"),permission=$("permission"),monsterEl=$("monster"),statusEl=$("status");
+const gpsText=$("gpsText"),caughtEl=$("caught"),collection=$("collection"),map=$("map");
+const encounter=$("encounter"),encEmoji=$("encEmoji"),encTitle=$("encTitle"),encText=$("encText");
 const monsters=[
- {name:"Mossling",color:"#55b957",type:"Wald"},
- {name:"Sparkit",color:"#f2c94c",type:"Strom"},
- {name:"Bubbloon",color:"#38bdf8",type:"Wasser"}
+{name:"Mossling",type:"Wald",emoji:"🌿",color:"#55b957",rarity:"Häufig"},
+{name:"Sparkit",type:"Strom",emoji:"⚡",color:"#f2c94c",rarity:"Häufig"},
+{name:"Bubbloon",type:"Wasser",emoji:"💧",color:"#38bdf8",rarity:"Häufig"},
+{name:"Emberoo",type:"Feuer",emoji:"🔥",color:"#f97316",rarity:"Selten"},
+{name:"Glimmer",type:"Mystisch",emoji:"✨",color:"#c084fc",rarity:"Sehr selten"},
+{name:"Frostel",type:"Eis",emoji:"❄️",color:"#67e8f9",rarity:"Selten"}
 ];
-let caught=Number(localStorage.getItem("mh_caught")||0), current=null, spawned=false;
-countEl.textContent=caught;
+let collectionData=JSON.parse(localStorage.getItem("mh_collection")||"[]");
+let position=null,watchId=null,current=null,spawned=false;
+caughtEl.textContent=collectionData.length;
 
-async function startCamera(){
+function renderCollection(){
+ $("grid").innerHTML=monsters.map(m=>{
+   let n=collectionData.filter(x=>x===m.name).length;
+   return `<div class="card"><div class="orb" style="--c:${m.color}"></div><h3>${m.emoji} ${m.name}</h3><p>${m.type} · ${m.rarity}<br>${n} gefangen</p></div>`;
+ }).join("");
+}
+renderCollection();
+
+async function start(){
  try{
-   const stream=await navigator.mediaDevices.getUserMedia({
-     video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},
-     audio:false
-   });
-   video.srcObject=stream;
-   status.textContent="Bewege dein iPhone langsam …";
-   hint.textContent="Tippe auf den Bildschirm, um zu suchen";
- }catch(e){
-   fallback.style.display="grid"; document.getElementById("error").textContent=e.message||"Kamerazugriff verweigert.";
-   status.style.display="none";
- }
+  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false});
+  video.srcObject=stream;
+  permission.style.display="none";
+  startGPS();
+  statusEl.textContent="GPS wird gesucht …";
+ }catch(e){alert("Bitte erlaube Safari den Kamerazugriff.");}
 }
-function spawn(){
- if(spawned) return;
+function startGPS(){
+ if(!navigator.geolocation){gpsText.textContent="GPS nicht verfügbar";return}
+ watchId=navigator.geolocation.watchPosition(p=>{
+   position={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};
+   gpsText.textContent=`📍 ${position.lat.toFixed(4)}, ${position.lon.toFixed(4)}`;
+   $("mapInfo").textContent=`Deine Position ist aktiv (ca. ${Math.round(position.accuracy)} m Genauigkeit). Monster werden jetzt in einem Spielradius von ungefähr 100 m verwaltet.`;
+   updateMap();
+   if(!spawned && Math.random()<0.22) spawnEncounter();
+ },()=>{
+   gpsText.textContent="📍 Standort nicht erlaubt";
+   statusEl.textContent="Standort erlauben, damit GPS-Spawns funktionieren.";
+ },{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+}
+function spawnEncounter(){
+ if(spawned)return;
  current=monsters[Math.floor(Math.random()*monsters.length)];
- monster.style.setProperty("--c",current.color);
- nameEl.textContent=current.name;
- // Slightly off-center to make it feel like it is in the scene.
- const x=35+Math.random()*30, y=42+Math.random()*18;
- monster.style.left=x+"%"; monster.style.top=y+"%";
- monster.style.display="block"; spawned=true;
- status.textContent="Da ist ein Monster! 👆";
- hint.textContent=current.type+"-Monster";
- monster.animate([
-   {transform:"translate(-50%,-50%) scale(.1)"},
-   {transform:"translate(-50%,-50%) scale(1.12)"},
-   {transform:"translate(-50%,-50%) scale(1)"}
- ],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
+ // Visual encounter position on camera: this is the first GPS-linked gameplay layer.
+ monsterEl.style.setProperty("--c",current.color);
+ $("monsterName").textContent=current.emoji+" "+current.name;
+ monsterEl.style.left=(30+Math.random()*40)+"%";
+ monsterEl.style.top=(40+Math.random()*20)+"%";
+ monsterEl.style.display="block";spawned=true;
+ statusEl.textContent=`${current.emoji} ${current.name} ist in der Nähe!`;
+ monsterEl.animate([{transform:"translate(-50%,-50%) scale(.1)"},{transform:"translate(-50%,-50%) scale(1.12)"},{transform:"translate(-50%,-50%) scale(1)"}],{duration:500,easing:"cubic-bezier(.2,.8,.2,1)"});
 }
-function catchMonster(){
- if(!spawned) return;
- caught++; localStorage.setItem("mh_caught",caught); countEl.textContent=caught;
- monster.animate([
-   {transform:"translate(-50%,-50%) scale(1)",opacity:1},
-   {transform:"translate(-50%,-50%) scale(1.4)",opacity:.9},
-   {transform:"translate(-50%,-50%) scale(.05)",opacity:0}
- ],{duration:350,easing:"ease-in"});
- catchFx.style.display="grid"; setTimeout(()=>catchFx.style.display="none",650);
- setTimeout(()=>{
-   monster.style.display="none"; monster.style.opacity=1; spawned=false;
-   status.textContent="Suche das nächste Monster …";
- },400);
+function openEncounter(){
+ if(!spawned)return;
+ encEmoji.textContent=current.emoji;encTitle.textContent=current.name;
+ encText.textContent=`${current.type}-Monster · ${current.rarity} · Fang es, bevor es verschwindet!`;
+ encounter.style.display="grid";
 }
-monster.addEventListener("click",catchMonster);
-document.body.addEventListener("click",(e)=>{
- if(e.target===monster || monster.contains(e.target)) return;
- if(!spawned && e.target!==status) spawn();
-});
-startCamera();
+function catchCurrent(){
+ if(!current)return;
+ collectionData.push(current.name);localStorage.setItem("mh_collection",JSON.stringify(collectionData));
+ caughtEl.textContent=collectionData.length;renderCollection();
+ encounter.style.display="none";
+ monsterEl.animate([{transform:"translate(-50%,-50%) scale(1)",opacity:1},{transform:"translate(-50%,-50%) scale(1.4)",opacity:.9},{transform:"translate(-50%,-50%) scale(.05)",opacity:0}],{duration:350});
+ setTimeout(()=>{monsterEl.style.display="none";monsterEl.style.opacity=1;spawned=false;current=null;statusEl.textContent="Suche nach weiteren Monstern …"},400);
+}
+function updateMap(){
+ if(!position)return;
+ const c=$("mapCanvas");
+ c.querySelectorAll(".spawn").forEach(x=>x.remove());
+ // Deterministic-looking local spawn points around the player for this prototype.
+ const points=[
+  {x:23,y:27,m:monsters[0]},{x:72,y:24,m:monsters[1]},{x:79,y:67,m:monsters[2]},
+  {x:29,y:74,m:monsters[3]},{x:55,y:18,m:monsters[4]}
+ ];
+ points.forEach(pt=>{
+  const el=document.createElement("div");el.className="spawn";el.style.left=pt.x+"%";el.style.top=pt.y+"%";el.textContent=pt.m.emoji;
+  const s=document.createElement("small");s.textContent=pt.m.name;el.appendChild(s);
+  el.onclick=()=>{current=pt.m;spawned=true;map.style.display="none";encEmoji.textContent=current.emoji;encTitle.textContent=current.name;encText.textContent=`${current.type}-Monster · ${current.rarity}`;encounter.style.display="grid"};c.appendChild(el);
+ });
+}
+$("startBtn").onclick=start;
+monsterEl.onclick=openEncounter;
+$("encCatch").onclick=catchCurrent;
+$("collectionBtn").onclick=()=>{collection.style.display="block";renderCollection()};
+$("closeCollection").onclick=()=>collection.style.display="none";
+$("mapBtn").onclick=()=>{collection.style.display="none";map.style.display="block";updateMap()};
+$("closeMap").onclick=()=>map.style.display="none";
+$("huntBtn").onclick=()=>{map.style.display="none";collection.style.display="none"};
 </script>
 </body>
 </html>
